@@ -5,7 +5,7 @@ Serverless, containerized tasks using:
 3-Cloud Storage and Terraform
 
 <p align="center">
-  <img src="logs.png" />
+  <img src="architicture.png" />
 </p>
 
 ## Overview
@@ -98,7 +98,7 @@ We can view the logs in the Cloud Run console:
 
 
 <p align="center">
-  <img src="architecture.png" />
+  <img src="logs.png" />
 </p>
 
 
