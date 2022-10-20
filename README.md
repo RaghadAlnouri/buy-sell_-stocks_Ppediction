@@ -1,7 +1,11 @@
-# Serverless & containerized tasks using Google Cloud Run, Pub/Sub, Cloud Storage and Terraform
+# Model design 
+Serverless, containerized tasks using:
+1- Google Cloud Run
+2- Pub/Sub
+3-Cloud Storage and Terraform
 
 <p align="center">
-  <img src="architecture.png" />
+  <img src="logs.png" />
 </p>
 
 ## Overview
@@ -51,7 +55,15 @@ gsutil cp app/data/financial_statements.csv gs://my-cloud-runner-input-bucket/fi
 
 If our infrastructure works properly we can check the Cloud Run logs in the Google console, and We should see that the container received some data and returning an output.
 
+we can try to upload the test file app/data/financial_statements.csv to GCS using gsutil. We will fetch input and output bucket name from the terraform output and extract them using jq:
 
+'''
+
+INPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .input_bucket.value)
+OUTPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .output_bucket.value)
+gsutil cp app/data/financial_statements.csv gs://${INPUT_BUCKET}/financial_statements.csv
+
+'''
 ## Deploy new image
 
 Run the simple deploy script `deploy.sh` which contains the following steps:
@@ -82,6 +94,13 @@ gcloud --project $PROJECT_ID \
 	--to-latest
 
 ```
+We can view the logs in the Cloud Run console:
+
+
+<p align="center">
+  <img src="architecture.png" />
+</p>
+
 
 ## Destroy
 
