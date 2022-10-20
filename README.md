@@ -1,4 +1,4 @@
-# Model design 
+# Structure design 
 Serverless, containerized tasks using:
 1- Google Cloud Run
 2- Pub/Sub
