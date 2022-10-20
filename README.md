@@ -5,7 +5,7 @@ Serverless, containerized tasks using:
 3-Cloud Storage and Terraform
 
 <p align="center">
-  <img src="architicture.png" />
+  <img src="architecture.png" />
 </p>
 
 ## Overview
