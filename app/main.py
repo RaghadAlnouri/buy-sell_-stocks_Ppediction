@@ -15,6 +15,10 @@ OUTPUT_BUCKET = os.environ.get("OUTPUT").replace("gs://", "")
 log = logging.getLogger()
 app = Flask(__name__)
 
+@app.route("/", methods=["GET"])
+def hello():
+    return f'Flask has opened a server, to predict fetch data in the bucket'
+
 
 @app.route("/", methods=["POST"])
 def index():

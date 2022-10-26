@@ -10,7 +10,7 @@ gsutil cp app/data/yahoo_financials.csv gs://${INPUT_BUCKET}/financial_statement
 
 while true; 
 do
-	 check if forecast exists, returns 0 if yes, 1 if not 
+	 check if Log_Reg exists, returns 0 if yes, 1 if not 
 	# (ref. https://cloud.google.com/storage/docs/gsutil/commands/stat#description)
 	gsutil -q stat OUTPUT_FILE
 
