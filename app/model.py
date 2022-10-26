@@ -5,7 +5,7 @@ from sklearn.metrics import balanced_accuracy_score
 
 log = logging.getLogger()
 
-def Log_Reg(df: pd.DataFrame, periods=28) -> -> pd.DataFrame:
+def Log_Reg(df: pd.DataFrame, periods=28) -> pd.DataFrame:
  
  log.info("Processing input.")
  #splitting to train and test data
