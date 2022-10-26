@@ -5,8 +5,8 @@ import pandas as pd
 import logging
 
 from flask import Flask, request
-from app.model import forecast
-from model import forecast
+#from app.model import Log_Reg
+from model import Log_Reg
 
 
 OUTPUT_BUCKET = os.environ.get("OUTPUT").replace("gs://", "")
@@ -47,11 +47,12 @@ def index():
     log.info(f"Input file: {input_file}")
     df = pd.read_csv(input_file)
 
-    output = forecast(df)
+    
+    output = Log_Reg(df)
 
     output_file = f"gs://{OUTPUT_BUCKET}/{name}"
     log.info(f"Output file: {output_file}")
     output.to_csv(output_file, index=False)
 
     return ("", 204)
-    #return ('buy or sell with balanced accuracy',output_df )
+    

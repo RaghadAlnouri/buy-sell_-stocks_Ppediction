@@ -5,7 +5,7 @@ from sklearn.metrics import balanced_accuracy_score
 
 log = logging.getLogger()
 
-def forecast(df: pd.DataFrame) -> pd.DataFrame:
+def Log_Reg(df: pd.DataFrame, periods=28) -> -> pd.DataFrame:
  
  log.info("Processing input.")
  #splitting to train and test data
@@ -24,8 +24,9 @@ def forecast(df: pd.DataFrame) -> pd.DataFrame:
  
  log.info("Computing predictions.")
  y_pred = logisticRegr.predict(X_test)
- 
+ future_df = logisticRegr.make_future_dataframe(periods=periods, include_history=False)
+ pred_df = logisticRegr.predict(future_df)
  log.info("Processing output.")
  balanced_acc = balanced_accuracy_score(y_test,y_pred)
- return balanced_acc
+ return pred_df,balanced_acc 
 

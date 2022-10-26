@@ -19,6 +19,7 @@ As a process here I will run a simple logistic regression model.
 - [Google Pub/Sub](https://cloud.google.com/pubsub/architecture) is a asynchronous messaging service which allows decoupling of sender and receiver of messages.
 - [Google Cloud Storage](https://cloud.google.com/storage) is a service to store objects.
 - [terraform](https://www.terraform.io/) is a infrastructure-as-code software.
+- Logistic regression
 
 
 ## Prerequisites
@@ -31,9 +32,24 @@ gcloud auth application-default login
 
 You can check if you are authenticated with the right user using `gcloud auth list`.
 
+# Creating a containerized model
+Let us build a very simple containerized workflow. We will use Logistic regression as baseline for now. We will fit the model on the fly and produce batch-predictions, without storing the actual model. This is feasible, because the fitting time of the model is quite low. 
+(we can alternatively use a pre-trained model by pulling a simple model artifact from external storage. Could be used when the model training is computationally expensive which is not the case here)
 
 ## Setup
 
+Using terraform, we plan the services as follows:
+
+- the Cloud Run service to process files from the input bucket
+- the Cloud Storage notifications to listen to new files in the input bucket
+- the Pub/Sub topic for the Cloud Storage notifications
+- the Pub/Sub subscription to subscribe the Cloud Run service to the Cloud Storage notifications topic
+- the app container to be used by Cloud Run
+
+With this plan, we can build our infrastructure using the setup script: setup.sh. This will
+
+1- build the container once so its available in cache
+2- initialize and apply Terraform
 Run terraform plan & apply using the setup script `setup.sh` which contains the following steps:
 
 ```
@@ -64,7 +80,9 @@ OUTPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .output_bucket.va
 gsutil cp app/data/financial_statements.csv gs://${INPUT_BUCKET}/financial_statements.csv
 
 '''
-## Deploy new image
+## Deploy new image (Updating the container)
+
+To manually update the container with a new latest version we can use the deploy.sh script. We need to to rebuild and push the image, update the Cloud Run service to pick it up and shift traffic.
 
 Run the simple deploy script `deploy.sh` which contains the following steps:
 
@@ -117,6 +135,8 @@ Run the destroy script `_destroy.sh` to delete(!) the bucket contents and the pr
 # 	terraform destroy)
 ```
 
-## Remarks
+## Clarifications
 
-- Cloud Run run has a [maximum timeout](https://cloud.google.com/run/docs/configuring/request-timeout) of 15 minutes, Google Pub/Sub has a [maximum acknowledge time](https://github.com/googleapis/google-cloud-go/issues/608) of 10 minutes, making it useless for more time-consuming tasks. You can use [bigger resources](https://cloud.google.com/run/docs/configuring/cpu#yaml) though to speed up the processing time.
+- Cloud Run run has a maximum timeout of 15 minutes (it is useless for more time consuming tasks).
+- Google Pub/Sub has a maximum acknowledge time of 10 minutes (it is useless for more time consuming tasks). 
+- The current script can only handle one request at a time, therefore we set the container concurrency to 1. However,Cloud Run natively handles multiple requests by using multiple containers. The maximum number of parallel Cloud Run containers is also configurable, and by default set to 1000.
