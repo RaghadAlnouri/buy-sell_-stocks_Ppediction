@@ -1,4 +1,4 @@
-# Structure design 
+# The design of the structure
 Serverless, containerized tasks using:
 1- Google Cloud Run
 2- Pub/Sub
