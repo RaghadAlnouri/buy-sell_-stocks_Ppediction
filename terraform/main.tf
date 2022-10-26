@@ -29,7 +29,7 @@ resource "google_project_iam_member" "project_owner" {
   ]
 }
 
-resource "google_storage_bucket" "storage_input_bucket" {
+resource "google_storage_bucket" "input_bucket" {
   name = local.input_bucket
   location= local.region
   depends_on = [
@@ -37,7 +37,7 @@ resource "google_storage_bucket" "storage_input_bucket" {
   ]
 }
 
-resource "google_storage_bucket" "storage_output_bucket" {
+resource "google_storage_bucket" "output_bucket" {
   name = local.output_bucket
   location= local.region
   depends_on = [
@@ -74,7 +74,7 @@ resource "google_cloud_run_service" "default" {
 
         env {
           name  = "OUTPUT"
-          value = google_storage_bucket.storage_output_bucket.url
+          value = google_storage_bucket.output_bucket.url
         }
       }
     }
@@ -133,7 +133,7 @@ resource "google_cloud_run_service_iam_member" "iam_member" {
 }
 
 resource "google_storage_notification" "storage_notification" {
-  bucket         = google_storage_bucket.storage_input_bucket.name
+  bucket         = google_storage_bucket.input_bucket.name
   payload_format = "JSON_API_V1"
   topic          = google_pubsub_topic.topic.id
   # only watch out for new objects being successfully created

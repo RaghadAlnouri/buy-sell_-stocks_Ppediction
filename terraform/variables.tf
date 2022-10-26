@@ -20,8 +20,8 @@ locals {
   region  = "us-east4"
 
   service_name  = "cloud-runner-service"
-  input_bucket  = "cloud-runner-input"
-  output_bucket = "cloud-runner-output"
+  input_bucket  = "cloud-runner-input-${random_id.id.hex}"
+  output_bucket = "cloud-runner-output-${random_id.id.hex}"
 
   image_name = "gcr.io/${local.project}/cloud-runner"
   image_tag  = "latest"
