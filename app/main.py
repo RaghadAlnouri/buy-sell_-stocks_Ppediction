@@ -3,60 +3,23 @@ import os
 import json
 import pandas as pd
 import logging
-
-from flask import Flask, request
-#from app.model import Log_Reg
 from model import Log_Reg
-
-
-OUTPUT_BUCKET = os.environ.get("OUTPUT").replace("gs://", "")
-
-
+from flask import Flask, request
+from scr.predict import predict
 log = logging.getLogger()
 app = Flask(__name__)
 
+
 @app.route("/", methods=["GET"])
 def hello():
-    return f'Flask has opened a server, to predict fetch data in the bucket'
+    return f'Hello, enter ticker name to get prediction "/get_stock_val/<ticker>"!\n'
 
 
-@app.route("/", methods=["POST"])
-def index():
-    # https://cloud.google.com/storage/docs/json_api/v1/objects
-    envelope = request.get_json()
+@app.route("/get_stock_val/<ticker>", methods=["GET"])
+def get_stock_pred(ticker: str) -> str:
+    prediction = predict(ticker)
+    return f'{prediction}'
 
-    if not envelope:
-        msg = "No message received"
-        log.error(f"Error: {msg}")
-        return f"Bad Request: {msg}", 400
-
-    if not isinstance(envelope, dict) or "message" not in envelope:
-        msg = "Invalid message format"
-        log.error(f"Error: {msg}")
-        return f"Bad Request: {msg}", 400
-
-    message = envelope["message"]
-
-    data = {}
-    if isinstance(message, dict) and "data" in message:
-        payload = base64.b64decode(message["data"]).decode("utf-8").strip()
-        data = json.loads(payload)
-
-    log.info(f"Data received: {data}")
-
-    bucket = data["bucket"]
-    name = data["name"]
-
-    input_file = f"gs://{bucket}/{name}"
-    log.info(f"Input file: {input_file}")
-    df = pd.read_csv(input_file)
-
-    
-    output = Log_Reg(df)
-
-    output_file = f"gs://{OUTPUT_BUCKET}/{name}"
-    log.info(f"Output file: {output_file}")
-    output.to_csv(output_file, index=False)
-
-    return ("", 204)
-    
+if __name__ == "__main__":
+    app.run(host="localhost", port=8080, debug=True)
+ 
