@@ -1,16 +1,22 @@
 """
 this script can be use to download all data for SNP 500
 """
-
-import yahoofinancials 
-from yahoofinancials import YahooFinancials as yf
-from yahoofinancials import stock_info as si
-import logging
-import warnings
 import datetime as dt
-import pandas as pd
+import warnings
+
 import numpy as np
-from pathlib import Path
+import pandas as pd
+import yfinance
+from pandas_datareader import data as pdr
+from yahoo_fin import stock_info as si
+from yahoofinancials import YahooFinancials as yf
+from yahoofinancials import yahoo_fin
+
+pd.set_option('display.max_rows', None)
+warnings.filterwarnings("ignore")
+yfinance.pdr_override()
+
+tickers = si.tickers_sp500()
 
 
 
@@ -20,41 +26,48 @@ from pathlib import Path
 
 num_of_years = 1
 start = dt.date.today() - dt.timedelta(days = int(365.25*num_of_years))
-start = start.strftime('%Y-%m-%d')
+start_train = start.strftime('%Y-%m-%d')
+end_train = "2022-05-31"
+start_test = "2022-06-01"
 end = dt.date.today()
 end = end.strftime('%Y-%m-%d')
 
-tickers = si.tickers_sp500()
-
-
-
 print('Attempting to scrape data  ')
 
-df = yf(tickers).get_historical_price_data(start_date=start, end_date=end, time_interval='daily')
-  
+df_train = yf(tickers).get_historical_price_data(start_date=start_train, end_date=end_train, time_interval='daily')
+df_test = yf(tickers).get_historical_price_data(start_date=start_test, end_date=end, time_interval='daily')  
 
-stockList = list(df.keys())
+stockList = list(df_train.keys())
 FEATURES = ['formatted_date','high', 'low', 'open', 'close', 'volume'] 
 for i in stockList:
-        df[i] = pd.DataFrame(df[i]['prices'], columns = FEATURES)#.dropna()
-        df[i] = df[i].set_index('formatted_date')
+        df_train[i] = pd.DataFrame(df_train[i]['prices'], columns = FEATURES)#.dropna()
+        df_train[i] = df_train[i].set_index('formatted_date')
+        df_test[i] = pd.DataFrame(df_test[i]['prices'], columns = FEATURES)#.dropna()
+        df_test[i] = df_test[i].set_index('formatted_date')
 
 for i in stockList:
     for lag in range(0,5):
-        df[i][f'lag_{lag}'] = df[i]['close'].shift(lag)
-        df[i]['next'] = df[i]['close'].shift(-1)
+        df_train[i][f'lag_{lag}'] = df_train[i]['close'].shift(lag)
+        df_train[i]['next'] = df_train[i]['close'].shift(-1)
+        df_test[i][f'lag_{lag}'] = df_test[i]['close'].shift(lag)
+        df_test[i]['next'] = df_test[i]['close'].shift(-1)
 
 def tagger(row):
     if row['next']<row['lag_0']:
-        return '1' #"buy"
+        return "buy"
     else:
-        return '0' #sell
+        return "sell"
 
 for i in stockList:
-    df[i]['ticker'] = i
-    df[i]['target'] = df[i].apply(tagger ,axis=1)
+    df_train[i]['ticker'] = i
+    df_train[i]['target'] = df_train[i].apply(tagger ,axis=1)
+    df_test[i]['ticker'] = i
+    df_test[i]['target'] = df_test[i].apply(tagger ,axis=1)
 
 for i in stockList:
-    df[i]= df[i].dropna(axis=0)
+    df_train[i]= df_train[i].dropna(axis=0)
+    df_test[i]= df_test[i].dropna(axis=0)
 
-data = pd.concat([df[i] for i in stockList], axis=1).reindex(df['AAPL'].index)
+
+train = pd.concat([df_train[i] for i in stockList], axis=0)
+test = pd.concat([df_test[i] for i in stockList], axis=0)

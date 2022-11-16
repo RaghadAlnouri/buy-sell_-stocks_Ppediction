@@ -1,32 +1,40 @@
-import logging
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import balanced_accuracy_score
+#!/usr/bin/python3
+from typing import Dict
+from google.cloud import aiplatform
+from google.protobuf import json_format
+from google.protobuf.struct_pb2 import Value
 
-log = logging.getLogger()
+def predict_tabular_classification_sample(
+    project: str,
+    endpoint_id: str,
+    instance_dict: Dict,
+    location: str = "us-central1",
+    api_endpoint: str = "us-central1-aiplatform.googleapis.com",
+):
+    # The AI Platform services require regional API endpoints.
+    client_options = {"api_endpoint": api_endpoint}
+    # Initialize client that will be used to create and send requests.
+    # This client only needs to be created once, and can be reused for multiple requests.
+    client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+    # for more info on the instance schema, please use get_model_sample.py
+    # and look at the yaml found in instance_schema_uri
+    instance = json_format.ParseDict(instance_dict, Value())
+    instances = [instance]
+    parameters_dict = {}
+    parameters = json_format.ParseDict(parameters_dict, Value())
+    endpoint = client.endpoint_path(
+        project=project, location=location, endpoint=endpoint_id
+    )
+    response = client.predict(
+        endpoint=endpoint, instances=instances, parameters=parameters
+    )
+    print("response")
+    print(" deployed_model_id:", response.deployed_model_id)
+    # See gs://google-cloud-aiplatform/schema/predict/prediction/tabular_classification_1.0.0.yaml for the format of the predictions.
+    predictions = response.predictions
+    for prediction in predictions:
+        print(" prediction:", dict(prediction))
 
-def Log_Reg(df: pd.DataFrame, periods=28) -> pd.DataFrame:
- 
- log.info("Processing input.")
- #splitting to train and test data
- data_train, data_test = []
- data_train = df.loc[:"2022-05-31"]
- data_test = df.loc["2022-05-31":]
- data_test = data_test.iloc[1:, :]
- X_train = data_train.iloc[:, [1, -3]].values
- y_train = data_train.iloc[:, -1].values
- X_test = data_test.iloc[:, [1, -3]].values
- y_test = data_test.iloc[:, -1].values
- 
- log.info("Fitting model.")
- logisticRegr = LogisticRegression()
- logisticRegr.fit(X_train, y_train)
- 
- log.info("Computing predictions.")
- y_pred = logisticRegr.predict(X_test)
- future_df = logisticRegr.make_future_dataframe(periods=periods, include_history=False)
- pred_df = logisticRegr.predict(future_df)
- log.info("Processing output.")
- balanced_acc = balanced_accuracy_score(y_test,y_pred)
- return pred_df,balanced_acc 
+
+# [END aiplatform_predict_tabular_classification_sample]
 

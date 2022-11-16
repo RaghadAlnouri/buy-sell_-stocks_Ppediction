@@ -1,8 +1,9 @@
 
 # get bucket names from terraform output
-INPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .input_bucket.value)
-OUTPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .output_bucket.value)
-
+#INPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .input_bucket.value)
+#OUTPUT_BUCKET=$(cd terraform && terraform output -json | jq -r .output_bucket.value)
+INPUT_BUCKET = "cloud-runner-input-b610"
+OUTPUT_BUCKET= "cloud-runner-output-b610"
 OUTPUT_FILE=gs://${OUTPUT_BUCKET}/financial_statements.csv
 
 # upload data to input bucket
